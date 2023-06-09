@@ -1,8 +1,3 @@
-import * as Font from "expo-font";
-import * as SplashScreen from 'expo-splash-screen';
-// import { Text, View } from "react-native";
-// import { useEffect, useCallback } from "react";
-// import Home from './Home'
 
 import { Accelerometer } from 'expo-sensors';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
@@ -11,18 +6,15 @@ import LottieView from 'lottie-react-native';
 import { Audio } from 'expo-av';
 import { StatusBar } from 'expo-status-bar';
 
-export default function App() {
-  const [fontsLoaded] = Font.useFonts({
-    "Inter-Black": require("./assets/fonts/Inter-Black.otf"),
-    "Inter-SemiBoldItalic":
-      "https://rsms.me/inter/font-files/Inter-SemiBoldItalic.otf?v=3.12",
-     'TiltPrism-Regular': require('./assets/fonts/TiltPrism-Regular.ttf'),
-  });
 
-  // useEffect(() => {
-    
-  // }, []);
+// const loadFonts = async () => {
+//   await Font.loadAsync({
+//     'TiltPrism-Regular': require('./assets/fonts/TiltPrism-Regular.ttf'),
+//   });
+// };
+// SplashScreen.preventAutoHideAsync();
 
+export default function Home() {
   const animation = useRef(new Animated.Value(0));
   const [shaking, setShaking] = useState(false);
   const duration = 3500
@@ -55,12 +47,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    async function prepare() {
-      await SplashScreen.preventAutoHideAsync();
-    }
-
-    prepare();
-
+    
     const subscription = Accelerometer.addListener(handleDeviceMotion);
 
     return () => {
@@ -200,21 +187,13 @@ export default function App() {
     setRoll(number)
   }
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+  return (
+    <View style={styles.animationContainer}>
+      <StatusBar style="auto" />
+      <Text style={{ fontFamily: 'TiltPrism-Regular', fontSize: 20 }}>
+        Custom Font Text
+      </Text>
 
-  if (!fontsLoaded) {
-    return null;
-  }
-
-  return  <View 
-    style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#F5B844', }}
-    onLayout={onLayoutRootView}>
-    
-    <Text style={{ fontFamily: "TiltPrism-Regular", fontSize: 60 }}>JUST DICE</Text>
       <TouchableOpacity onPress={() => setShaking(true)}>
       <LottieView
         progress={animation.current}
@@ -226,6 +205,18 @@ export default function App() {
         source={require('./assets/dice.json')}
       />
       </TouchableOpacity>
-    
-  </View>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  animationContainer: {
+    backgroundColor: '#F5B844',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  buttonContainer: {
+    paddingTop: 20,
+  },
+});
