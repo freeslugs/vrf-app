@@ -1,15 +1,109 @@
 import * as Font from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
-// import { Text, View } from "react-native";
-// import { useEffect, useCallback } from "react";
-// import Home from './Home'
 
 import { Accelerometer } from 'expo-sensors';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Button, StyleSheet, View, Animated, Easing, Text, TouchableOpacity } from 'react-native';
+import { Button, StyleSheet, View, Animated, Easing, Text, TouchableOpacity, PanResponder, SafeAreaView, Modal } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { Audio } from 'expo-av';
 import { StatusBar } from 'expo-status-bar';
+
+import { WebView } from 'react-native-webview';
+
+const duration = 3500
+
+const Card = ({ randomNumber, requestId, transactionHash, url, openWebView }) => {
+  const [dismissed, setDismissed] = useState(false);
+  const pan = useRef(new Animated.ValueXY()).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: Animated.event([
+        null,
+        { dy: pan.y },
+      ],{useNativeDriver: false}),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dy > 50) {
+          Animated.timing(pan, {
+            toValue: { x: 0, y: 500 },
+            duration: 200,
+            useNativeDriver: false,
+          }).start(() => {
+            setDismissed(true);
+          });
+        } else {
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  if (dismissed) {
+    return <TouchableOpacity onPress={() => {
+      setDismissed(false)
+      Animated.spring(pan, {
+        toValue: { x: 0, y: 0 },
+        useNativeDriver: false,
+      }).start();
+    }}><Text style={{ fontSize: 18, }}>show me the blockchain</Text></TouchableOpacity>
+  }
+
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        style={[styles.card, { transform: [{ translateY: pan.y }] }]}
+        {...panResponder.panHandlers}
+      >
+         <Text style={styles.title}>Random Number</Text>
+        <Text style={styles.description}>{randomNumber}</Text>
+
+        <Text style={styles.title}>Request ID</Text>
+        <Text style={styles.description}>{requestId}</Text>
+
+      {/*  <Text style={styles.title}>Transaction Hash</Text>
+        <Text style={styles.description}>{transactionHash}</Text>*/}
+
+        <TouchableOpacity onPress={openWebView}>
+          <Text style={styles.title}>URL</Text>
+          <Text style={styles.description}>{url}</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -100,
+  },
+  card: {
+    // width: 300,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  content: {
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    marginTop: StatusBar.currentHeight || 0,
+  },
+});
 
 export default function App() {
   const [fontsLoaded] = Font.useFonts({
@@ -19,16 +113,14 @@ export default function App() {
      'TiltPrism-Regular': require('./assets/fonts/TiltPrism-Regular.ttf'),
   });
 
-  // useEffect(() => {
-    
-  // }, []);
-
-  const animation = useRef(new Animated.Value(0));
   const [shaking, setShaking] = useState(false);
-  const duration = 3500
+  
   const [result, setResult] = useState(null)
 
   const [soundObject, setSoundObject] = React.useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const animation = useRef(new Animated.Value(0));
 
   const playMusic = async () => {
     const sound = new Audio.Sound();
@@ -183,7 +275,8 @@ export default function App() {
 
   rollDice = async () => {
     playMusic();
-    console.log('hitting the api')
+  
+    console.log('...hitting the api.')
     const data = await makeHttpRequest();
     if (data.error) {
       console.log("ERRORED OUT SORRY, RESET!")
@@ -196,9 +289,21 @@ export default function App() {
     const number = randomNumber[0] % 6 
     console.log(number)
 
+    // const number = 3
+    // const data = {"randomNumber": ["88358717654014146925202915699279637122262361423757893976031470393372670921312"], "requestId": "84777536122901979736094332040405992414041506429913385762103108554193336342633", "success": true, "transactionHash": "0x58bf5f025957d17f65beb4fd6792a16f1a2a682668a9ac61cc46f8e901be5523", "url": "https://mumbai.polygonscan.com/tx/0xf9ed827b47f11df44c1008c1a5c34d48b0f33fcc1db05e1b874eeb0d953c73e4#eventlog"}
+
     setResult(data);
     setRoll(number)
   }
+
+
+  const openWebView = () => {
+    setModalVisible(true);
+  };
+
+  const closeWebView = () => {
+    setModalVisible(false);
+  };
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -210,22 +315,48 @@ export default function App() {
     return null;
   }
 
-  return  <View 
-    style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#F5B844', }}
-    onLayout={onLayoutRootView}>
-    
-    <Text style={{ fontFamily: "TiltPrism-Regular", fontSize: 60 }}>JUST DICE</Text>
-      <TouchableOpacity onPress={() => setShaking(true)}>
-      <LottieView
-        progress={animation.current}
-        style={{
-          width: 200,
-          height: 200,
-        }}
-        speed={1} 
-        source={require('./assets/dice.json')}
-      />
-      </TouchableOpacity>
-    
-  </View>
+  return (
+    <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: "center", backgroundColor: '#F5B844' }} onLayout={onLayoutRootView}>
+      <View style={{ height: 150, alignItems: "center", padding: 10,  }}>
+        <Text style={{ fontFamily: "TiltPrism-Regular", fontSize: 50, marginTop: 40 }}>JUST ROLL</Text>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 10 }}>Use Chainlink VRF to roll the dice on-chain</Text>
+      </View>
+
+      <View style={{ flex: 1, justifyContent: 'center',  }}>
+        <TouchableOpacity onPress={() => setShaking(true)}>
+          <LottieView
+            progress={animation.current}
+            style={{
+              width: 200,
+              height: 200,
+            }}
+            speed={1}
+            source={require('./assets/dice.json')}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 150, marginLeft: 20, marginRight: 20, alignItems: "center" , justifyContent:"center",  }}>
+        { !shaking && !result && <Text style={{ fontSize: 18, fontWeight: 'bold', }}>Shake to roll the dice!</Text> }
+        { shaking && <Text style={{ fontSize: 18, }}>rolling dice on the blockchain...</Text> }
+
+        { !shaking && result && 
+          <Card randomNumber={result.randomNumber} requestId={result.requestId} transactionHash={result.transactionHash} url={result.url} openWebView={openWebView} />
+        }
+      </View>
+
+      
+
+      <Modal visible={modalVisible} animationType="slide">
+        <SafeAreaView style={styles.modalContainer}>
+          <StatusBar barStyle="dark-content" />
+          <WebView source={{ uri: result && result.url }} />
+          <Button title="Close" onPress={closeWebView} />
+        </SafeAreaView>
+      </Modal>
+
+
+    </SafeAreaView>
+  );
+   
 }
