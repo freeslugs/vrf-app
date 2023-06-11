@@ -1,7 +1,7 @@
 from PIL import Image
 
 # Open the PNG image
-image = Image.open("dice/0.png")
+image = Image.open("icon.png")
 
 # Convert the image to RGB mode if it's not already
 image = image.convert("RGB")
