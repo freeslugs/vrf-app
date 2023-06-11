@@ -43,7 +43,7 @@ export async function makeHttpRequest(numDice) {
 //   return new Promise((resolve) => {
 //     setTimeout(() => {
 //       resolve({
-//         error: "sorry we fucked up"
+//         error: "error 524 never responded"
 //       });
 //     }, 1000);
 //   });

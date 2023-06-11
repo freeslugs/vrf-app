@@ -146,11 +146,13 @@ export default function App() {
 
   const handleRoll = async () => {
     // show the loading data
+    setProgress(0)
+    setLoadingText(loadingMessages[0])
     const interval = setInterval(() => {
       setLoadingText((prevText) => {
         const currentIndex = prevText ? loadingMessages.indexOf(prevText) : -1;
         const nextIndex = currentIndex + 1;
-
+        
         if (nextIndex >= loadingMessages.length) {
           clearInterval(interval); // Stop the interval when all messages have been shown
           return prevText; // Keep showing the last message
@@ -169,12 +171,13 @@ export default function App() {
     const data = await makeHttpRequest(numDice);
 
     if (data.error) {
-      setError(data.error)
+      setError('houston we have a problem: ' + data.error)
       setRolling(false)
       setNumbers(null)
       setResult(null)
       setLoadingText(null)
       setProgress(0)
+      clearInterval(interval)
       return false;
     }
 
@@ -182,6 +185,8 @@ export default function App() {
     const _numbers = randomNumber.map(i => parseInt(i) % 6)
     setNumbers(_numbers)
     setResult(data)
+
+    // console.log(data)
   }
   
   const doneRolling = ({ finished }) => {
@@ -221,6 +226,26 @@ export default function App() {
         <Appbar.Content title="Just Roll"  titleStyle={{ fontFamily: "TiltPrism-Regular", fontSize: 28 }} />
         <Appbar.Action icon="help" onPress={() => setInstructionsVisible(true)} color="white" />
       </Appbar.Header>
+
+      <Portal>
+        <Snackbar visible={error} onDismiss={() => setError(null)} duration={3000} action={{
+          label: 'x',
+          onPress: () => {
+            setError(null)
+          },
+        }}>
+          {error}
+        </Snackbar> 
+      </Portal>
+
+      {/* web modal! */}
+
+      { webVisible && <Portal>
+        <View style={{backgroundColor: 'white' , flex: 1}}>
+        <WebView source={{ uri: result && result.url }} style={{ flex: 1 }} />
+        <Button title="Close" onPress={() => setWebVisible(false)}>Close</Button>
+        </View>
+      </Portal> }
 
       {/* instructions dialog */}
       
@@ -272,19 +297,6 @@ export default function App() {
 
        </Modal>
      </Portal> }
-
-     {/* web modal! */}
-
-     <Portal>
-       <Modal visible={webVisible} contentContainerStyle={{ flex: 1, backgroundColor: 'white' }}>
-         <WebView source={{ uri: result && result.url }} />
-         <Button title="Close" onPress={() => setWebVisible(false)}>Close</Button>
-       </Modal>
-     </Portal>
-
-     <Snackbar visible={error} onDismiss={() => setError(null)} duration={3000}>
-       {error}
-     </Snackbar>
 
       <DiceGrid numDice={numDice} rolling={rolling} numbers={numbers} callback={doneRolling} />
       

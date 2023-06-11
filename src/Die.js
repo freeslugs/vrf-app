@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef } from 'react';
-import { TouchableOpacity, Animated, Easing } from 'react-native';
+import { TouchableOpacity, View, Animated, Easing } from 'react-native';
 import LottieView from 'lottie-react-native';
 
 duration = 3500 
@@ -64,7 +64,7 @@ const Die = ({ rolling, number, callback }) => {
   }, []);
 
   return (
-    <TouchableOpacity style={{flex: 1, justifyContent: 'center', 
+    <View style={{flex: 1, justifyContent: 'center', 
     alignItems: "center", }}>
       <LottieView
         progress={animation.current}
@@ -74,7 +74,7 @@ const Die = ({ rolling, number, callback }) => {
         speed={1}
         source={require('../assets/dice.json')}
       />
-    </TouchableOpacity>
+    </View>
   );
 };
 
