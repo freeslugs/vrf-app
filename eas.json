@@ -10,9 +10,18 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "image": "latest"
+      }
+    }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appName": "Just Roll Pro"
+      }
+    }
   }
 }
