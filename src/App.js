@@ -182,7 +182,7 @@ export default function App() {
     }
 
     const { randomNumber } = data;
-    const _numbers = randomNumber.map(i => parseInt(i) % 6)
+    const _numbers = randomNumber.map(i => Number(BigInt(i) % 6n))
     setNumbers(_numbers)
     setResult(data)
 
@@ -292,7 +292,7 @@ export default function App() {
           <Text style={{ marginLeft: 8,  fontWeight: 'bold' }}>Mod each by 6 and add 1</Text>
         </View>
         <View style={{marginTop: 8}}> 
-          { result.randomNumber.map((n, i) => <Text key={`b-${i}`} style={{  fontSize: 10}}>{n} % 6 = {parseInt(n) % 6} + 1 = {numbers[i] + 1}</Text> )}
+          { result.randomNumber.map((n, i) => <Text key={`b-${i}`} style={{  fontSize: 10}}>{n} % 6 + 1 = {numbers[i]} + 1 = {numbers[i] + 1}</Text> )}
         </View> 
 
        </Modal>
